@@ -243,8 +243,8 @@ this.group.position.y = 11.6 * scaleFactor;
                 direction.x = Number(keys['KeyD']) - Number(keys['KeyA']);
                 direction.normalize();
 
-                if (keys['KeyW'] || keys['KeyS']) velocity.z -= direction.z * 150.0 * delta;
-                if (keys['KeyA'] || keys['KeyD']) velocity.x -= direction.x * 150.0 * delta;
+                if (keys['KeyW'] || keys['KeyS']) velocity.z -= direction.z * 50.0 * delta;
+                if (keys['KeyA'] || keys['KeyD']) velocity.x -= direction.x * 50.0 * delta;
 
                 controls.moveRight(-velocity.x * delta);
                 controls.moveForward(-velocity.z * delta);
