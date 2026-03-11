@@ -196,8 +196,12 @@
                     b(this.head, jawHinge, chin, 0.20); 
                 });
                 
-                // Lift it slightly so feet rest exactly on the grid
-                this.group.position.y = 11.6; 
+              // --- SCALING THE UNIT ---
+const scaleFactor = 0.13; // Shrinks it to 13% of its original size
+this.group.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+// Adjust the floor offset so the feet still touch the grid perfectly
+this.group.position.y = 11.6 * scaleFactor;
             }
 
             update(time) {
