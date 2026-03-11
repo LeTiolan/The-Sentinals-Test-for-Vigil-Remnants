@@ -236,15 +236,15 @@ this.group.position.y = 11.6 * scaleFactor;
 
         function handleMovement(delta) {
             if (controls.isLocked) {
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.x -= velocity.x * 5.0 * delta;
+                velocity.z -= velocity.z * 5.0 * delta;
 
                 direction.z = Number(keys['KeyW']) - Number(keys['KeyS']);
                 direction.x = Number(keys['KeyD']) - Number(keys['KeyA']);
                 direction.normalize();
 
-                if (keys['KeyW'] || keys['KeyS']) velocity.z -= direction.z * 50.0 * delta;
-                if (keys['KeyA'] || keys['KeyD']) velocity.x -= direction.x * 50.0 * delta;
+                if (keys['KeyW'] || keys['KeyS']) velocity.z -= direction.z * 20.0 * delta;
+                if (keys['KeyA'] || keys['KeyD']) velocity.x -= direction.x * 20.0 * delta;
 
                 controls.moveRight(-velocity.x * delta);
                 controls.moveForward(-velocity.z * delta);
