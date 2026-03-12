@@ -68,6 +68,7 @@
                 const obsMat = new THREE.MeshPhongMaterial({ color: 0x18181a, specular: 0x00aacc, shininess: 80 });
                 const tenMat = new THREE.MeshPhongMaterial({ color: 0x111111, specular: 0x222222, shininess: 2, flatShading: true });
                 const tiMat = new THREE.MeshPhongMaterial({ color: 0x888890, specular: 0xffffff, shininess: 120 });
+                const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
 
                 const v = (x,y,z) => new THREE.Vector3(x,y,z);
                 const b = (parent, p1, p2, radius, mat = obsMat) => {
