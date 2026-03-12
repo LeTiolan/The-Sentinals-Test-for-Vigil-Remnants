@@ -264,6 +264,228 @@ update(time, playerPosition) {
             this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
             this.head.rotation.z = 0; // No tilting. Gimbal-locked.
         }
+    }update(time, playerPosition) {
+        // 1. Heavy Juggernaut Charge - Unstoppable, rigid machine sprint
+        const cycle = time * 7.0; 
+
+        // 2. Brutal, high-impact stomping (huge vertical drop)
+        const drop = Math.pow(Math.abs(Math.sin(cycle)), 2.0); 
+        this.torso.position.y = drop * 0.7 - 0.2; 
+        
+        // Zero horizontal drift. It charges in a perfectly straight line like a train.
+        this.torso.position.x = 0; 
+
+        // 3. Rigid, tank-like posture. Locked core.
+        const forwardLean = 0.45;
+        this.torso.rotation.x = forwardLean + (drop * 0.15); // Bounces heavily into the lean
+        this.torso.rotation.y = 0; // ZERO hip twist. Machines don't need to twist to run.
+        this.torso.rotation.z = 0; // ZERO side sway. 
+
+        if (this.vertebrae && this.vertebrae.length > 0) {
+            this.vertebrae.forEach((vert) => {
+                // Spine is locked into a rigid forward curve, no loose wiggling
+                vert.rotation.x = 0.15; 
+                vert.rotation.y = 0; 
+                vert.rotation.z = 0; 
+                vert.position.x = 0;
+            });
+        }
+
+        // 4. SHOULDERS: Hard-locked into the sockets, slightly widened for a hulking silhouette
+        this.L_Arm.position.x = 3.0;
+        this.R_Arm.position.x = -3.0;
+        this.L_Arm.position.y = 3.2;
+        this.R_Arm.position.y = 3.2;
+
+        // 5. Stomping legs. Huge sweeping thighs, shins snap to act like structural pillars
+        const legSweep = 1.5; 
+        this.L_Thigh.rotation.x = Math.sin(cycle) * legSweep;
+        this.R_Thigh.rotation.x = Math.sin(cycle + Math.PI) * legSweep;
+        
+        // Shins snap up sharply just to clear the ground, then lock straight down for the impact
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.5)) * 1.8;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.5)) * 1.8;
+
+        // 6. Arms: Terminator-style rigid pendulum swing. 
+        const armSweep = 1.4;
+        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI) * armSweep;
+        this.R_Arm.rotation.x = Math.sin(cycle) * armSweep;
+
+        // Shoulders don't tuck in. They stay wide and intimidating.
+        this.L_Arm.rotation.z = -0.1;
+        this.R_Arm.rotation.z = 0.1;
+
+        // Elbows are locked rigidly. No floppy, organic movement.
+        this.L_Forearm.rotation.z = -1.2;
+        this.R_Forearm.rotation.z = 1.2;
+
+        // Aggressive engine pulsing
+        const breath = Math.pow(Math.abs(Math.sin(time * 6.0)), 2.0);
+        this.torso.scale.z = 1 + breath * 0.05; 
+        if (this.pl) this.pl.intensity = 1.5 + (breath * 1.5); 
+        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.1);
+
+        // 7. Head: Eerily stabilized, dead center, zero bounce relative to the player
+        this.head.position.x = 0; 
+        this.head.position.y = 2.8 - this.torso.position.y; // Absorbs the body drop perfectly
+        this.head.position.z = 1.0; 
+
+        if (playerPosition) {
+            const targetLocal = this.group.worldToLocal(playerPosition.clone());
+            this.head.lookAt(targetLocal);
+            // Stares you down from under its brow, perfectly level
+            this.head.rotation.x = Math.max(-1.0, Math.min(1.0, this.head.rotation.x - forwardLean - 0.2));
+            this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
+            this.head.rotation.z = 0; // No tilting. Gimbal-locked.
+        }
+    }update(time, playerPosition) {
+        // 1. Heavy Juggernaut Charge - Unstoppable, rigid machine sprint
+        const cycle = time * 7.0; 
+
+        // 2. Brutal, high-impact stomping (huge vertical drop)
+        const drop = Math.pow(Math.abs(Math.sin(cycle)), 2.0); 
+        this.torso.position.y = drop * 0.7 - 0.2; 
+        
+        // Zero horizontal drift. It charges in a perfectly straight line like a train.
+        this.torso.position.x = 0; 
+
+        // 3. Rigid, tank-like posture. Locked core.
+        const forwardLean = 0.45;
+        this.torso.rotation.x = forwardLean + (drop * 0.15); // Bounces heavily into the lean
+        this.torso.rotation.y = 0; // ZERO hip twist. Machines don't need to twist to run.
+        this.torso.rotation.z = 0; // ZERO side sway. 
+
+        if (this.vertebrae && this.vertebrae.length > 0) {
+            this.vertebrae.forEach((vert) => {
+                // Spine is locked into a rigid forward curve, no loose wiggling
+                vert.rotation.x = 0.15; 
+                vert.rotation.y = 0; 
+                vert.rotation.z = 0; 
+                vert.position.x = 0;
+            });
+        }
+
+        // 4. SHOULDERS: Hard-locked into the sockets, slightly widened for a hulking silhouette
+        this.L_Arm.position.x = 3.0;
+        this.R_Arm.position.x = -3.0;
+        this.L_Arm.position.y = 3.2;
+        this.R_Arm.position.y = 3.2;
+
+        // 5. Stomping legs. Huge sweeping thighs, shins snap to act like structural pillars
+        const legSweep = 1.5; 
+        this.L_Thigh.rotation.x = Math.sin(cycle) * legSweep;
+        this.R_Thigh.rotation.x = Math.sin(cycle + Math.PI) * legSweep;
+        
+        // Shins snap up sharply just to clear the ground, then lock straight down for the impact
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.5)) * 1.8;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.5)) * 1.8;
+
+        // 6. Arms: Terminator-style rigid pendulum swing. 
+        const armSweep = 1.4;
+        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI) * armSweep;
+        this.R_Arm.rotation.x = Math.sin(cycle) * armSweep;
+
+        // Shoulders don't tuck in. They stay wide and intimidating.
+        this.L_Arm.rotation.z = -0.1;
+        this.R_Arm.rotation.z = 0.1;
+
+        // Elbows are locked rigidly. No floppy, organic movement.
+        this.L_Forearm.rotation.z = -1.2;
+        this.R_Forearm.rotation.z = 1.2;
+
+        // Aggressive engine pulsing
+        const breath = Math.pow(Math.abs(Math.sin(time * 6.0)), 2.0);
+        this.torso.scale.z = 1 + breath * 0.05; 
+        if (this.pl) this.pl.intensity = 1.5 + (breath * 1.5); 
+        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.1);
+
+        // 7. Head: Eerily stabilized, dead center, zero bounce relative to the player
+        this.head.position.x = 0; 
+        this.head.position.y = 2.8 - this.torso.position.y; // Absorbs the body drop perfectly
+        this.head.position.z = 1.0; 
+
+        if (playerPosition) {
+            const targetLocal = this.group.worldToLocal(playerPosition.clone());
+            this.head.lookAt(targetLocal);
+            // Stares you down from under its brow, perfectly level
+            this.head.rotation.x = Math.max(-1.0, Math.min(1.0, this.head.rotation.x - forwardLean - 0.2));
+            this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
+            this.head.rotation.z = 0; // No tilting. Gimbal-locked.
+        }
+    }update(time, playerPosition) {
+        // 1. Heavy Juggernaut Charge - Unstoppable, rigid machine sprint
+        const cycle = time * 7.0; 
+
+        // 2. Brutal, high-impact stomping (huge vertical drop)
+        const drop = Math.pow(Math.abs(Math.sin(cycle)), 2.0); 
+        this.torso.position.y = drop * 0.7 - 0.2; 
+        
+        // Zero horizontal drift. It charges in a perfectly straight line like a train.
+        this.torso.position.x = 0; 
+
+        // 3. Rigid, tank-like posture. Locked core.
+        const forwardLean = 0.45;
+        this.torso.rotation.x = forwardLean + (drop * 0.15); // Bounces heavily into the lean
+        this.torso.rotation.y = 0; // ZERO hip twist. Machines don't need to twist to run.
+        this.torso.rotation.z = 0; // ZERO side sway. 
+
+        if (this.vertebrae && this.vertebrae.length > 0) {
+            this.vertebrae.forEach((vert) => {
+                // Spine is locked into a rigid forward curve, no loose wiggling
+                vert.rotation.x = 0.15; 
+                vert.rotation.y = 0; 
+                vert.rotation.z = 0; 
+                vert.position.x = 0;
+            });
+        }
+
+        // 4. SHOULDERS: Hard-locked into the sockets, slightly widened for a hulking silhouette
+        this.L_Arm.position.x = 3.0;
+        this.R_Arm.position.x = -3.0;
+        this.L_Arm.position.y = 3.2;
+        this.R_Arm.position.y = 3.2;
+
+        // 5. Stomping legs. Huge sweeping thighs, shins snap to act like structural pillars
+        const legSweep = 1.5; 
+        this.L_Thigh.rotation.x = Math.sin(cycle) * legSweep;
+        this.R_Thigh.rotation.x = Math.sin(cycle + Math.PI) * legSweep;
+        
+        // Shins snap up sharply just to clear the ground, then lock straight down for the impact
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.5)) * 1.8;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.5)) * 1.8;
+
+        // 6. Arms: Terminator-style rigid pendulum swing. 
+        const armSweep = 1.4;
+        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI) * armSweep;
+        this.R_Arm.rotation.x = Math.sin(cycle) * armSweep;
+
+        // Shoulders don't tuck in. They stay wide and intimidating.
+        this.L_Arm.rotation.z = -0.1;
+        this.R_Arm.rotation.z = 0.1;
+
+        // Elbows are locked rigidly. No floppy, organic movement.
+        this.L_Forearm.rotation.z = -1.2;
+        this.R_Forearm.rotation.z = 1.2;
+
+        // Aggressive engine pulsing
+        const breath = Math.pow(Math.abs(Math.sin(time * 6.0)), 2.0);
+        this.torso.scale.z = 1 + breath * 0.05; 
+        if (this.pl) this.pl.intensity = 1.5 + (breath * 1.5); 
+        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.1);
+
+        // 7. Head: Eerily stabilized, dead center, zero bounce relative to the player
+        this.head.position.x = 0; 
+        this.head.position.y = 2.8 - this.torso.position.y; // Absorbs the body drop perfectly
+        this.head.position.z = 1.0; 
+
+        if (playerPosition) {
+            const targetLocal = this.group.worldToLocal(playerPosition.clone());
+            this.head.lookAt(targetLocal);
+            // Stares you down from under its brow, perfectly level
+            this.head.rotation.x = Math.max(-1.0, Math.min(1.0, this.head.rotation.x - forwardLean - 0.2));
+            this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
+            this.head.rotation.z = 0; // No tilting. Gimbal-locked.
+        }
     }
 }
 
