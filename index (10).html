@@ -256,8 +256,7 @@ scene.add(unit.group);
 }
 
 const unit = new Sentinel();
-        scene.add(unit.group);
-
+        scene.add(unit.group)
         // --- 3. MOVEMENT CONTROLS (Identical to your main game logic) ---
         const controls = new PointerLockControls(camera, document.body);
         document.body.addEventListener('click', () => controls.lock());
