@@ -191,14 +191,24 @@ class Sentinel {
     }
 
 update(time, playerPosition) {
-        const walkTempo = time * 3.2; 
+        const walkTempo = time * 3.5; 
         const rawCycle = Math.sin(walkTempo);
-        const poppyCycle = Math.sign(rawCycle) * Math.pow(Math.abs(rawCycle), 0.45); 
+        
+        // Drive cycle: snappy swing forward, heavy grind backward
+        const driveCycle = Math.sin(walkTempo) - Math.sin(walkTempo * 2) * 0.15;
+        const pop = Math.sign(rawCycle) * Math.pow(Math.abs(rawCycle), 0.5);
 
-        this.torso.position.x = Math.sin(walkTempo) * 0.25;
-        this.torso.position.y = Math.pow(Math.abs(Math.cos(walkTempo)), 1.8) * 0.4; 
-        this.torso.rotation.y = poppyCycle * 0.25; 
-        this.torso.rotation.z = Math.sin(walkTempo) * -0.08; 
+        // Two impacts per cycle (one for each footfall)
+        const footfall = Math.cos(walkTempo * 2); 
+        
+        // The torso drops heavily on the catch, pushes up on the stride
+        this.torso.position.y = footfall * 0.2; 
+        this.torso.position.x = 0; // Removed horizontal sliding so feet stay planted
+        
+        // Torso leans forward into the walk, twisting with the hips
+        this.torso.rotation.x = 0.15 + (footfall * 0.05);
+        this.torso.rotation.y = pop * 0.25; 
+        this.torso.rotation.z = Math.sin(walkTempo) * -0.05; 
 
         const topSway = Math.sin(walkTempo * 0.5) * 0.15;
 
@@ -218,16 +228,16 @@ update(time, playerPosition) {
         this.R_Arm.position.y = 3.2 + (topSway * 0.8);
 
         const legSweep = 1.1; 
-        this.L_Thigh.rotation.x = poppyCycle * legSweep;
-        this.R_Thigh.rotation.x = -poppyCycle * legSweep;
+        this.L_Thigh.rotation.x = driveCycle * legSweep;
+        this.R_Thigh.rotation.x = -driveCycle * legSweep;
         
-        this.L_Shin.rotation.x = Math.max(0, Math.sin(walkTempo - 0.4)) * 1.4;
-        this.R_Shin.rotation.x = Math.max(0, Math.sin(walkTempo + Math.PI - 0.4)) * 1.4;
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(walkTempo - 0.5)) * 1.5;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(walkTempo + Math.PI - 0.5)) * 1.5;
 
-        this.L_Arm.rotation.x = -poppyCycle * 0.6 - 0.15;
-        this.R_Arm.rotation.x = poppyCycle * 0.6 - 0.15;
-        this.L_Forearm.rotation.z = -0.6 + poppyCycle * 0.2;
-        this.R_Forearm.rotation.z = 0.6 + poppyCycle * 0.2;
+        this.L_Arm.rotation.x = -pop * 0.6 - 0.15;
+        this.R_Arm.rotation.x = pop * 0.6 - 0.15;
+        this.L_Forearm.rotation.z = -0.6 + Math.abs(pop) * 0.2;
+        this.R_Forearm.rotation.z = 0.6 + Math.abs(pop) * 0.2;
 
         const breath = Math.sin(time * 1.5) * Math.cos(time * 0.5);
         this.torso.scale.z = 1 + breath * 0.05; 
@@ -235,7 +245,7 @@ update(time, playerPosition) {
         if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.06);
 
         this.head.position.x = topSway * 3.5;
-        this.head.position.y = 3.0 - this.torso.position.y * 0.8; 
+        this.head.position.y = 3.0 - this.torso.position.y; 
         if (playerPosition) {
             const targetLocal = this.group.worldToLocal(playerPosition.clone());
             this.head.lookAt(targetLocal);
