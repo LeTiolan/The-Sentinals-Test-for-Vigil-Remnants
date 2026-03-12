@@ -248,15 +248,6 @@ update(time, playerPosition) {
 
 const unit = new Sentinel();
 scene.add(unit.group);
-        
-            this.head.rotation.y = Math.max(-0.7, Math.min(0.7, this.head.rotation.y));
-            this.head.rotation.z = topSway * 0.6; 
-        }
-    }
-}
-
-const unit = new Sentinel();
-        scene.add(unit.group)
         // --- 3. MOVEMENT CONTROLS (Identical to your main game logic) ---
         const controls = new PointerLockControls(camera, document.body);
         document.body.addEventListener('click', () => controls.lock());
