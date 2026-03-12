@@ -403,81 +403,144 @@ update(time, playerPosition) {
         this.head.position.x = 0; 
         this.head.position.y = 2.8 - this.torso.position.y; // Absorbs the body drop perfectly
         this.head.position.z = 1.0; 
-update(time, playerPosition) {
-        // 1. Heavy Juggernaut Charge - Unstoppable, rigid machine sprint
-        const cycle = time * 7.0; 
-
-        // 2. Brutal, high-impact stomping (huge vertical drop)
-        const drop = Math.pow(Math.abs(Math.sin(cycle)), 2.0); 
-        this.torso.position.y = drop * 0.7 - 0.2; 
+class Sentinel {
+    constructor() {
+        this.group = new THREE.Group();
+        this.vertebrae = [];
         
-        // Zero horizontal drift. It charges in a perfectly straight line like a train.
-        this.torso.position.x = 0; 
+        const obsMat = new THREE.MeshPhongMaterial({ color: 0x18181a, specular: 0x00aacc, shininess: 80 });
+        const tenMat = new THREE.MeshPhongMaterial({ color: 0x111111, specular: 0x222222, shininess: 2, flatShading: true });
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
 
-        // 3. Rigid, tank-like posture. Locked core.
-        const forwardLean = 0.45;
-        this.torso.rotation.x = forwardLean + (drop * 0.15); // Bounces heavily into the lean
-        this.torso.rotation.y = 0; // ZERO hip twist. Machines don't need to twist to run.
-        this.torso.rotation.z = 0; // ZERO side sway. 
+        this.torso = new THREE.Group(); this.group.add(this.torso);
+        const topY = 3.0, botY = -2.0;
+        
+        this.head = new THREE.Group(); 
+        this.torso.add(this.head);
+        this.head.position.set(0, topY, 0); 
 
-        if (this.vertebrae && this.vertebrae.length > 0) {
-            this.vertebrae.forEach((vert) => {
-                // Spine is locked into a rigid forward curve, no loose wiggling
-                vert.rotation.x = 0.15; 
-                vert.rotation.y = 0; 
-                vert.rotation.z = 0; 
-                vert.position.x = 0;
-            });
+        this.L_Thigh = new THREE.Group(); this.torso.add(this.L_Thigh);
+        this.R_Thigh = new THREE.Group(); this.torso.add(this.R_Thigh);
+        this.L_Shin = new THREE.Group(); this.L_Thigh.add(this.L_Shin);
+        this.R_Shin = new THREE.Group(); this.R_Thigh.add(this.R_Shin);
+
+        this.L_Arm = new THREE.Group(); this.torso.add(this.L_Arm);
+        this.R_Arm = new THREE.Group(); this.torso.add(this.R_Arm);
+        this.L_Forearm = new THREE.Group(); this.L_Arm.add(this.L_Forearm);
+        this.R_Forearm = new THREE.Group(); this.R_Arm.add(this.R_Forearm);
+
+        const bRigged = (parentGroup, pivotWorld, p1, p2, radius, mat = obsMat) => {
+            const localP1 = p1.clone().sub(pivotWorld);
+            const localP2 = p2.clone().sub(pivotWorld);
+            const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([localP1, localP2]), 2, radius, 12, false);
+            parentGroup.add(new THREE.Mesh(geo, mat));
+            if (mat === obsMat) {
+                const cap = new THREE.SphereGeometry(radius * 1.05, 12, 12);
+                const m1 = new THREE.Mesh(cap, glowMat); m1.position.copy(localP1); 
+                const m2 = new THREE.Mesh(cap, glowMat); m2.position.copy(localP2); 
+                parentGroup.add(m1, m2);
+            }
+        };
+
+        const v = (x,y,z) => new THREE.Vector3(x,y,z);
+        const stT = v(0, topY - 0.5, 1.4), stB = v(0, topY - 2.8, 1.5);
+        
+        bRigged(this.torso, v(0,0,0), stT, stB, 0.12);
+        for (let i = 0; i <= 15; i++) {
+            const y = topY - (i * ((topY - botY) / 15));
+            const vert = new THREE.Mesh(new THREE.CylinderGeometry(0.16+(i*0.012), 0.16+(i*0.012), 0.3, 16), obsMat);
+            vert.position.set(0, y, 0); 
+            this.torso.add(vert);
+            this.vertebrae.push(vert);
         }
 
-        // 4. SHOULDERS: Hard-locked into the sockets, slightly widened for a hulking silhouette
-        this.L_Arm.position.x = 3.0;
-        this.R_Arm.position.x = -3.0;
-        this.L_Arm.position.y = 3.2;
-        this.R_Arm.position.y = 3.2;
+        const orbY = topY + 1.8;
+        this.orb = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), glowMat);
+        this.orb.position.set(0, orbY - topY, 0); 
+        this.head.add(this.orb);
+        this.pl = new THREE.PointLight(0x00f2ff, 3.0, 60); 
+        this.pl.position.set(0, orbY - topY, 0); 
+        this.head.add(this.pl);
 
-        // 5. Stomping legs. Huge sweeping thighs, shins snap to act like structural pillars
-        const legSweep = 1.5; 
-        this.L_Thigh.rotation.x = Math.sin(cycle) * legSweep;
-        this.R_Thigh.rotation.x = Math.sin(cycle + Math.PI) * legSweep;
+        [-1, 1].forEach(x => {
+            const sh = v(2.8 * x, topY + 0.2, 0);
+            const el = v(3.2 * x, 0, 0.2);
+            const wC = v(3.4 * x, -3.2, 0.6);
+            const hip = v(1.6 * x, botY, 0);
+            const kn = v(1.8 * x, -6.5, 1.2);
+            const ank = v(2.0 * x, -10.5, -0.5);
+
+            if (x === 1) { 
+                this.L_Thigh.position.copy(hip); this.L_Shin.position.copy(kn).sub(hip);
+                this.L_Arm.position.copy(sh); this.L_Forearm.position.copy(el).sub(sh);
+                bRigged(this.L_Thigh, hip, hip, kn, 0.38); 
+                bRigged(this.L_Shin, kn, kn, ank, 0.25);
+                bRigged(this.L_Arm, sh, sh, el, 0.26); 
+                bRigged(this.L_Forearm, el, el, wC, 0.22); 
+            } else { 
+                this.R_Thigh.position.copy(hip); this.R_Shin.position.copy(kn).sub(hip);
+                this.R_Arm.position.copy(sh); this.R_Forearm.position.copy(el).sub(sh);
+                bRigged(this.R_Thigh, hip, hip, kn, 0.38); 
+                bRigged(this.R_Shin, kn, kn, ank, 0.25);
+                bRigged(this.R_Arm, sh, sh, el, 0.26); 
+                bRigged(this.R_Forearm, el, el, wC, 0.22); 
+            }
+        });
         
-        // Shins snap up sharply just to clear the ground, then lock straight down for the impact
-        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.5)) * 1.8;
-        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.5)) * 1.8;
+        const scaleFactor = 0.22; 
+        this.group.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    }
 
-        // 6. Arms: Terminator-style rigid pendulum swing. 
-        const armSweep = 1.4;
-        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI) * armSweep;
-        this.R_Arm.rotation.x = Math.sin(cycle) * armSweep;
+    update(time, playerPosition) {
+        // 1. Hyper-aggressive mechanical timing
+        const tempo = 8.5;
+        const cycle = time * tempo;
+        
+        // Piston curve: makes movement "snap" rather than swing
+        const snap = (t) => Math.sign(Math.sin(t)) * Math.pow(Math.abs(Math.sin(t)), 0.5);
+        const drive = snap(cycle);
 
-        // Shoulders don't tuck in. They stay wide and intimidating.
-        this.L_Arm.rotation.z = -0.1;
-        this.R_Arm.rotation.z = 0.1;
+        // 2. Torso: Violent, heavy impact
+        const impact = Math.pow(Math.abs(Math.cos(cycle)), 4.0);
+        this.torso.position.y = 2.0 + (impact * 0.6);
+        this.torso.rotation.x = 0.6 + (impact * 0.2); // Lunging forward
+        this.torso.rotation.y = drive * 0.2; // Mechanical hip torque
 
-        // Elbows are locked rigidly. No floppy, organic movement.
-        this.L_Forearm.rotation.z = -1.2;
-        this.R_Forearm.rotation.z = 1.2;
+        // 3. Shoulder Lock: Keeps arms pinned to sockets
+        this.L_Arm.position.set(2.8, 3.2, 0);
+        this.R_Arm.position.set(-2.8, 3.2, 0);
 
-        // Aggressive engine pulsing
-        const breath = Math.pow(Math.abs(Math.sin(time * 6.0)), 2.0);
-        this.torso.scale.z = 1 + breath * 0.05; 
-        if (this.pl) this.pl.intensity = 1.5 + (breath * 1.5); 
-        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.1);
+        // 4. Arm Sprints: Hard, piston-like pumps
+        const armSwing = 1.4;
+        this.L_Arm.rotation.x = -drive * armSwing;
+        this.R_Arm.rotation.x = drive * armSwing;
+        
+        // Elbows lock and unlock with the snap
+        this.L_Forearm.rotation.z = -0.5 - Math.max(0, -drive) * 1.5;
+        this.R_Forearm.rotation.z = 0.5 + Math.max(0, drive) * 1.5;
 
-        // 7. Head: Eerily stabilized, dead center, zero bounce relative to the player
-        this.head.position.x = 0; 
-        this.head.position.y = 2.8 - this.torso.position.y; // Absorbs the body drop perfectly
-        this.head.position.z = 1.0; 
+        // 5. Leg Drive: High-stepping mechanical pistons
+        const legSwing = 1.6;
+        this.L_Thigh.rotation.x = drive * legSwing;
+        this.R_Thigh.rotation.x = -drive * legSwing;
+        
+        // Shins snap back to avoid the floor
+        this.L_Shin.rotation.x = Math.max(0, snap(cycle - 1.0)) * 2.0;
+        this.R_Shin.rotation.x = Math.max(0, snap(cycle + Math.PI - 1.0)) * 2.0;
 
+        // 6. Visual Effects: Core revving
+        const pulse = Math.pow(Math.abs(Math.sin(time * 10)), 2);
+        if (this.pl) this.pl.intensity = 2.0 + (pulse * 3.0);
+        if (this.orb) this.orb.scale.setScalar(1.0 + pulse * 0.1);
+
+        // 7. Head: Predator-locked tracking
         if (playerPosition) {
             const targetLocal = this.group.worldToLocal(playerPosition.clone());
             this.head.lookAt(targetLocal);
-            // Stares you down from under its brow, perfectly level
-            this.head.rotation.x = Math.max(-1.0, Math.min(1.0, this.head.rotation.x - forwardLean - 0.2));
-            this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
-            this.head.rotation.z = 0; // No tilting. Gimbal-locked.
+            this.head.rotation.x -= 0.6; // Offset for the body lean
         }
     }
+}
 }
 
 const unit = new Sentinel();
