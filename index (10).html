@@ -191,77 +191,76 @@ class Sentinel {
     }
 
 update(time, playerPosition) {
-        const cycle = time * 4.0; 
+        const cycle = time * 4.2; 
 
-        // Snappy forward leg swing, slow heavy push backward
-        const driveCycle = Math.sin(cycle) - Math.sin(cycle * 2) * 0.2; 
+        const driveCycle = Math.sin(cycle) - Math.sin(cycle * 2) * 0.15; 
         
-        // Explosive push off the floor: deep drop on catch, sharp rise
-        const drop = Math.pow(Math.abs(Math.cos(cycle)), 2.5); 
-        this.torso.position.y = drop * 0.45; 
-        this.torso.position.x = 0; 
+        // Deeper drop, and we return a tiny bit of horizontal shift so the weight visibly transfers
+        const drop = Math.pow(Math.abs(Math.cos(cycle)), 2.2); 
+        this.torso.position.y = drop * 0.5 - 0.1; 
+        this.torso.position.x = Math.sin(cycle) * 0.15; 
 
-        // Pelvis tilts forward for the momentum
-        const forwardLean = 0.35;
-        this.torso.rotation.x = forwardLean + (drop * 0.15);
-        this.torso.rotation.y = Math.sin(cycle) * 0.25; 
-        this.torso.rotation.z = Math.sin(cycle) * -0.05; 
+        const forwardLean = 0.4;
+        this.torso.rotation.x = forwardLean + (drop * 0.2);
+        this.torso.rotation.y = Math.sin(cycle) * 0.3; 
+        this.torso.rotation.z = Math.sin(cycle) * -0.08; 
 
-        const topSway = Math.sin(cycle * 0.5) * 0.1;
+        const topSway = Math.sin(cycle * 0.5) * 0.12;
 
         if (this.vertebrae && this.vertebrae.length > 0) {
             const vLen = this.vertebrae.length;
             this.vertebrae.forEach((vert, i) => {
-                const wave = Math.sin(cycle * 1.5 - i * 0.2) * 0.06;
+                // Offset the wave by the joint index 'i' so the motion ripples up the spine
+                const wave = Math.sin(cycle * 1.5 - i * 0.25) * 0.08;
                 const flex = (i / vLen) * topSway;
                 
-                // Spine progressively bends forward to match the run
-                vert.rotation.x = 0.08; 
+                vert.rotation.x = 0.1; 
                 vert.rotation.z = wave + flex; 
-                // Upper body twists opposite to hips to balance the stride
-                vert.rotation.y = -Math.sin(cycle) * 0.1; 
-                vert.position.x = (wave * 0.3) + (flex * 2.0);
+                // Spine twists in a rippling delay opposite to the hips
+                vert.rotation.y = -Math.sin(cycle - (i * 0.1)) * 0.15; 
+                vert.position.x = (wave * 0.4) + (flex * 2.0);
             });
         }
 
-        this.L_Arm.position.x = 2.8 + (topSway * 2.0);
-        this.R_Arm.position.x = -2.8 + (topSway * 2.0);
-        this.L_Arm.position.y = 3.2 - (topSway * 0.5);
-        this.R_Arm.position.y = 3.2 + (topSway * 0.5);
+        // Tucked shoulders for a more aggressive, athletic posture
+        this.L_Arm.position.x = 2.5 + (topSway * 2.0);
+        this.R_Arm.position.x = -2.5 + (topSway * 2.0);
+        this.L_Arm.position.y = 3.0 - (topSway * 0.5);
+        this.R_Arm.position.y = 3.0 + (topSway * 0.5);
 
-        // LEGS: Plant and push
-        const legSweep = 1.2; 
+        const legSweep = 1.3; 
         this.L_Thigh.rotation.x = driveCycle * legSweep;
         this.R_Thigh.rotation.x = -driveCycle * legSweep;
         
-        // Shins stay straight when planted (pushing), but snap up sharply during recovery
-        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.8)) * 1.8;
-        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.8)) * 1.8;
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.6)) * 1.8;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.6)) * 1.8;
 
-        // ARMS: Fully balanced using all joints
-        const armSweep = 1.1;
-        // Shoulders swing strictly opposite to the legs
-        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI) * armSweep;
-        this.R_Arm.rotation.x = Math.sin(cycle) * armSweep;
+        const armSweep = 1.2;
+        // Added a -0.2 phase lag to the arms so they "drag" slightly behind the torso twist for fluidity
+        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI - 0.2) * armSweep;
+        this.R_Arm.rotation.x = Math.sin(cycle - 0.2) * armSweep;
 
-        // Elbows pump: bend sharply when swinging forward, straighten when pushing back
-        this.L_Forearm.rotation.z = -0.3 - Math.max(0, Math.sin(cycle + Math.PI)) * 0.8;
-        this.R_Forearm.rotation.z = 0.3 + Math.max(0, Math.sin(cycle)) * 0.8;
+        // Arms swing inward across the chest slightly, rather than strictly straight back and forth
+        this.L_Arm.rotation.z = -0.2 - Math.sin(cycle + Math.PI) * 0.2;
+        this.R_Arm.rotation.z = 0.2 - Math.sin(cycle) * 0.2;
 
-        const breath = Math.sin(time * 2.0) * Math.cos(time * 0.5);
-        this.torso.scale.z = 1 + breath * 0.05; 
+        this.L_Forearm.rotation.z = -0.4 - Math.max(0, Math.sin(cycle + Math.PI - 0.2)) * 0.9;
+        this.R_Forearm.rotation.z = 0.4 + Math.max(0, Math.sin(cycle - 0.2)) * 0.9;
+
+        const breath = Math.sin(time * 2.5) * Math.cos(time * 0.5);
+        this.torso.scale.z = 1 + breath * 0.06; 
         if (this.pl) this.pl.intensity = 1.2 + (breath * 0.8);
-        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.06);
+        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.08);
 
         this.head.position.x = topSway * 3.0;
-        this.head.position.y = 3.0 - this.torso.position.y; 
+        this.head.position.y = 2.8 - this.torso.position.y; 
         if (playerPosition) {
             const targetLocal = this.group.worldToLocal(playerPosition.clone());
             this.head.lookAt(targetLocal);
-            // Head tilts up slightly to compensate for the forward spine lean
-            this.head.rotation.x = Math.max(-0.5, Math.min(0.5, this.head.rotation.x - forwardLean - 0.2));
-            this.head.rotation.y = Math.max(-0.7, Math.min(0.7, this.head.rotation.y));
-            this.head.rotation.z = topSway * 0.6; 
+            // Head locks forward intensely while the body dynamically shifts underneath it
+            this.head.rotation.x = Math.max(-0.6, Math.min(0.6, this.head.rotation.x - forwardLean - 0.3));
+            this.head.rotation.y = Math.max(-0.8, Math.min(0.8, this.head.rotation.y));
+            this.head.rotation.z = topSway * 0.8; 
         }
     }
 }
