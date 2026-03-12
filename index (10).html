@@ -190,50 +190,49 @@ class Sentinel {
         this.group.position.y = 11.6 * scaleFactor;
     }
 
-    update(time, playerPosition) {
-        const walkTempo = time * 2.2; 
+  update(time, playerPosition) {
+        const walkTempo = time * 1.8; 
         const rawCycle = Math.sin(walkTempo);
-        const weightedCycle = Math.sign(rawCycle) * Math.pow(Math.abs(rawCycle), 0.7);
+        const weightedCycle = rawCycle * (0.8 + 0.2 * Math.cos(walkTempo * 2)); 
 
-        this.torso.rotation.y = weightedCycle * 0.28;
-        this.torso.rotation.z = Math.sin(walkTempo) * 0.08;
-        this.torso.position.y = Math.abs(Math.cos(walkTempo * 2)) * 0.12; 
+        this.torso.rotation.y = weightedCycle * 0.3;
+        this.torso.rotation.z = Math.sin(walkTempo * 0.5) * 0.05; 
+        this.torso.position.y = Math.abs(Math.cos(walkTempo)) * 0.15; 
 
         if (this.vertebrae && this.vertebrae.length > 0) {
             this.vertebrae.forEach((vert, i) => {
-                const wave = Math.sin(walkTempo * 2 - i * 0.18) * 0.04;
+                const wave = Math.sin(walkTempo * 1.5 - i * 0.2) * 0.05;
                 vert.rotation.z = wave; 
-                vert.position.x = wave * 0.4;
+                vert.position.x = wave * 0.3;
             });
         }
 
-        const legSweep = 0.6;
-        this.L_Thigh.rotation.x = weightedCycle * legSweep;
-        this.R_Thigh.rotation.x = -weightedCycle * legSweep;
+        const legSweep = 0.65;
+        this.L_Thigh.rotation.x = Math.sin(walkTempo) * legSweep;
+        this.R_Thigh.rotation.x = Math.sin(walkTempo + Math.PI) * legSweep;
         
-        this.L_Shin.rotation.x = weightedCycle > 0 ? weightedCycle * 0.8 : 0;
-        this.R_Shin.rotation.x = weightedCycle < 0 ? -weightedCycle * 0.8 : 0;
+        this.L_Shin.rotation.x = rawCycle > 0 ? rawCycle * 0.9 : 0;
+        this.R_Shin.rotation.x = rawCycle < 0 ? -rawCycle * 0.9 : 0;
 
-        this.L_Arm.rotation.x = -weightedCycle * 0.25;
-        this.R_Arm.rotation.x = weightedCycle * 0.25;
-        this.L_Forearm.rotation.z = -0.3 + Math.sin(time) * 0.05;
-        this.R_Forearm.rotation.z = 0.3 - Math.sin(time) * 0.05;
+        this.L_Arm.rotation.x = -Math.sin(walkTempo) * 0.3 - 0.1;
+        this.R_Arm.rotation.x = -Math.sin(walkTempo + Math.PI) * 0.3 - 0.1;
+        this.L_Forearm.rotation.z = -0.4 + Math.sin(time * 0.8) * 0.03;
+        this.R_Forearm.rotation.z = 0.4 - Math.sin(time * 0.9) * 0.03;
 
-        const breath = Math.sin(time * 1.5);
-        this.torso.scale.z = 1 + breath * 0.03; 
-        if (this.pl) this.pl.intensity = 1.2 + (breath * 0.8);
-        if (this.orb) this.orb.scale.setScalar(1.0 + Math.sin(time * 4) * 0.04);
+        const breath = Math.sin(time * 1.2) * Math.cos(time * 0.5);
+        this.torso.scale.z = 1 + breath * 0.04; 
+        if (this.pl) this.pl.intensity = 1.2 + (breath * 0.6);
+        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.05);
 
-        this.head.position.y = 3.0 + Math.sin(time * 1.5) * 0.08;
+        this.head.position.y = 3.0 - this.torso.position.y * 0.8; 
         if (playerPosition) {
             const targetLocal = this.group.worldToLocal(playerPosition.clone());
             this.head.lookAt(targetLocal);
-            this.head.rotation.x = Math.max(-0.4, Math.min(0.4, this.head.rotation.x));
-            this.head.rotation.y = Math.max(-0.8, Math.min(0.8, this.head.rotation.y));
+            this.head.rotation.x = Math.max(-0.3, Math.min(0.3, this.head.rotation.x));
+            this.head.rotation.y = Math.max(-0.6, Math.min(0.6, this.head.rotation.y));
             this.head.rotation.z = 0; 
         }
     }
-}
 
         const unit = new Sentinel();
         scene.add(unit.group);
