@@ -60,185 +60,216 @@ scene.fog = new THREE.Fog(0x555555, 5, 40);
         scene.add(dLight);
 
 class Sentinel {
-            this.group = new THREE.Group();
-                
-                // MATERIALS
-                const obsMat = new THREE.MeshPhongMaterial({ color: 0x18181a, specular: 0x00aacc, shininess: 80 });
-                const tenMat = new THREE.MeshPhongMaterial({ color: 0x111111, specular: 0x222222, shininess: 2, flatShading: true });
-                const tiMat = new THREE.MeshPhongMaterial({ color: 0x888890, specular: 0xffffff, shininess: 120 });
-                const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+    constructor() {
+        this.group = new THREE.Group();
+        
+        // MATERIALS
+        const obsMat = new THREE.MeshPhongMaterial({ color: 0x18181a, specular: 0x00aacc, shininess: 80 });
+        const tenMat = new THREE.MeshPhongMaterial({ color: 0x111111, specular: 0x222222, shininess: 2, flatShading: true });
+        const tiMat = new THREE.MeshPhongMaterial({ color: 0x888890, specular: 0xffffff, shininess: 120 });
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
 
-                // --- 1. THE NEW BONE HIERARCHY ---
-                this.torso = new THREE.Group(); this.group.add(this.torso);
-                
-                const topY = 3.0, botY = -2.0;
-                
-                this.head = new THREE.Group(); 
-                this.torso.add(this.head);
-                this.head.position.set(0, topY, 0); 
+        // --- 1. THE NEW BONE HIERARCHY ---
+        this.torso = new THREE.Group(); this.group.add(this.torso);
+        
+        const topY = 3.0, botY = -2.0;
+        
+        this.head = new THREE.Group(); 
+        this.torso.add(this.head);
+        this.head.position.set(0, topY, 0); 
 
-                this.L_Thigh = new THREE.Group(); this.torso.add(this.L_Thigh);
-                this.R_Thigh = new THREE.Group(); this.torso.add(this.R_Thigh);
-                this.L_Shin = new THREE.Group(); this.L_Thigh.add(this.L_Shin);
-                this.R_Shin = new THREE.Group(); this.R_Thigh.add(this.R_Shin);
+        this.L_Thigh = new THREE.Group(); this.torso.add(this.L_Thigh);
+        this.R_Thigh = new THREE.Group(); this.torso.add(this.R_Thigh);
+        this.L_Shin = new THREE.Group(); this.L_Thigh.add(this.L_Shin);
+        this.R_Shin = new THREE.Group(); this.R_Thigh.add(this.R_Shin);
 
-                this.L_Arm = new THREE.Group(); this.torso.add(this.L_Arm);
-                this.R_Arm = new THREE.Group(); this.torso.add(this.R_Arm);
-                this.L_Forearm = new THREE.Group(); this.L_Arm.add(this.L_Forearm);
-                this.R_Forearm = new THREE.Group(); this.R_Arm.add(this.R_Forearm);
+        this.L_Arm = new THREE.Group(); this.torso.add(this.L_Arm);
+        this.R_Arm = new THREE.Group(); this.torso.add(this.R_Arm);
+        this.L_Forearm = new THREE.Group(); this.L_Arm.add(this.L_Forearm);
+        this.R_Forearm = new THREE.Group(); this.R_Arm.add(this.R_Forearm);
 
-                // --- 2. THE MATHEMATICAL RIGGER ---
-                const bRigged = (parentGroup, pivotWorld, p1, p2, radius, mat = obsMat) => {
-                    const localP1 = p1.clone().sub(pivotWorld);
-                    const localP2 = p2.clone().sub(pivotWorld);
-                    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([localP1, localP2]), 2, radius, 12, false);
-                    parentGroup.add(new THREE.Mesh(geo, mat));
-                    if (mat === obsMat) {
-                        const cap = new THREE.SphereGeometry(radius * 1.05, 12, 12);
-                        const m1 = new THREE.Mesh(cap, glowMat); m1.position.copy(localP1); 
-                        const m2 = new THREE.Mesh(cap, glowMat); m2.position.copy(localP2); 
-                        parentGroup.add(m1, m2);
-                    }
-                };
+        // --- 2. THE MATHEMATICAL RIGGER ---
+        const bRigged = (parentGroup, pivotWorld, p1, p2, radius, mat = obsMat) => {
+            const localP1 = p1.clone().sub(pivotWorld);
+            const localP2 = p2.clone().sub(pivotWorld);
+            const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([localP1, localP2]), 2, radius, 12, false);
+            parentGroup.add(new THREE.Mesh(geo, mat));
+            if (mat === obsMat) {
+                const cap = new THREE.SphereGeometry(radius * 1.05, 12, 12);
+                const m1 = new THREE.Mesh(cap, glowMat); m1.position.copy(localP1); 
+                const m2 = new THREE.Mesh(cap, glowMat); m2.position.copy(localP2); 
+                parentGroup.add(m1, m2);
+            }
+        };
 
-                const v = (x,y,z) => new THREE.Vector3(x,y,z);
-                const stT = v(0, topY - 0.5, 1.4), stM = v(0, topY - 1.6, 1.45), stB = v(0, topY - 2.8, 1.5);
-                
-                // Spine & Ribcage
-                bRigged(this.torso, v(0,0,0), stT, stB, 0.12);
-                for (let i = 0; i <= 15; i++) {
-                    const y = topY - (i * ((topY - botY) / 15));
-                    const vert = new THREE.Mesh(new THREE.CylinderGeometry(0.16+(i*0.012), 0.16+(i*0.012), 0.3, 16), obsMat);
-                    vert.position.set(0, y, 0); this.torso.add(vert);
-                    if (i >= 1 && i <= 13) bRigged(this.torso, v(0,0,0), v(0, y, 0), v(0, y + 0.1, -0.45), 0.08);
-                    if (i >= 2 && i <= 13 && (i % 2 === 0 || i === 13)) {
-                        const w = 1.8 - (i * 0.05), oL = v(-w, y, -0.2), oR = v(w, y, -0.2);
-                        const stC = new THREE.Vector3().lerpVectors(stT, stB, Math.min((i - 2) / 8, 1));
-                        bRigged(this.torso, v(0,0,0), v(0,y,0), oL, 0.08); bRigged(this.torso, v(0,0,0), v(0,y,0), oR, 0.08);
-                        bRigged(this.torso, v(0,0,0), oL, stC, 0.08); bRigged(this.torso, v(0,0,0), oR, stC, 0.08);
-                    }
-                }
-
-                // Head Core
-                const orbY = topY + 1.8;
-                this.orb = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), glowMat);
-                this.orb.position.set(0, orbY - topY, 0); 
-                this.head.add(this.orb);
-                
-                this.pl = new THREE.PointLight(0x00f2ff, 3.0, 60); 
-                this.pl.position.set(0, orbY - topY, 0); 
-                this.head.add(this.pl);
-                bRigged(this.head, v(0, topY, 0), v(0, topY, 0), v(0, orbY + 0.2, -0.8), 0.1); 
-
-                // --- 3. PROCEDURAL LIMB GENERATION ---
-                const pub = v(0, botY - 0.5, 0.5);
-                const jHing = v(0, topY + 0.5, -0.2), chin = v(0, topY + 0.8, 1.6), bCen = v(0, orbY + 0.8, 1.1);
-                
-                [-1, 1].forEach(x => {
-                    const sh = v(2.8 * x, topY + 0.2, 0);
-                    const cl = v(1.3 * x, topY - 0.2, 0.8);
-                    const sc = v(1.6 * x, topY - 1.8, -0.8);
-                    const el = v(3.2 * x, 0, 0.2);
-                    const wC = v(3.4 * x, -3.2, 0.6);
-                    const hip = v(1.6 * x, botY, 0);
-                    const kn = v(1.8 * x, -6.5, 1.2);
-                    const pat = v(1.8 * x, -6.6, 1.6);
-                    const ank = v(2.0 * x, -10.5, -0.5);
-                    const hl = v(2.0 * x, -10.8, -1.2);
-                    const bI = v(1.5 * x, -11.2, 0.8);
-                    const bO = v(2.5 * x, -11.2, 0.8);
-                    const jw = v(-0.6*x, topY+0.6, 0.6);
-                    const chk = v(-0.8*x, orbY, 0.8);
-
-                    let T_Grp, S_Grp, A_Grp, F_Grp;
-                    if (x === 1) { 
-                        this.L_Thigh.position.copy(hip); this.L_Shin.position.copy(kn).sub(hip);
-                        this.L_Arm.position.copy(sh); this.L_Forearm.position.copy(el).sub(sh);
-                        T_Grp = this.L_Thigh; S_Grp = this.L_Shin; A_Grp = this.L_Arm; F_Grp = this.L_Forearm;
-                    } else { 
-                        this.R_Thigh.position.copy(hip); this.R_Shin.position.copy(kn).sub(hip);
-                        this.R_Arm.position.copy(sh); this.R_Forearm.position.copy(el).sub(sh);
-                        T_Grp = this.R_Thigh; S_Grp = this.R_Shin; A_Grp = this.R_Arm; F_Grp = this.R_Forearm;
-                    }
-
-                    bRigged(this.torso, v(0,0,0), stT, cl, 0.12); bRigged(this.torso, v(0,0,0), cl, sh, 0.12); bRigged(this.torso, v(0,0,0), sh, sc, 0.13);
-                    bRigged(this.torso, v(0,0,0), v(0, topY + 0.7, -0.4), sh, 0.12, tenMat); 
-                    bRigged(this.torso, v(0,0,0), v(0, topY - 3.2, -0.2), sc, 0.22, tenMat); 
-                    bRigged(this.torso, v(0,0,0), v(0, topY - 3.9, -0.1), v(1.3 * x, topY - 2.6, -0.5), 0.14, tenMat);
-
-                    bRigged(A_Grp, sh, sh, el, 0.26); 
-                    bRigged(F_Grp, el, el, wC, 0.22); 
-                    
-                    const palm = v(wC.x, wC.y - 0.2, wC.z);
-                    bRigged(F_Grp, el, wC, palm, 0.18); 
-
-                    const fT = 0.11; const tM = v(3.0 * x, -3.6, 0.8);
-                    bRigged(F_Grp, el, palm, tM, fT); bRigged(F_Grp, el, tM, v(2.8 * x, -4.0, 1.0), fT - 0.02);
-                    const iM = v(3.4 * x, -4.0, 1.2);
-                    bRigged(F_Grp, el, palm, iM, fT); bRigged(F_Grp, el, iM, v(3.4 * x, -4.6, 1.4), fT - 0.02);
-                    const pM = v(3.8 * x, -3.8, 0.7);
-                    bRigged(F_Grp, el, palm, pM, fT); bRigged(F_Grp, el, pM, v(4.0 * x, -4.2, 0.5), fT - 0.02);
-
-                    bRigged(T_Grp, hip, hip, kn, 0.38); 
-                    bRigged(T_Grp, hip, kn, pat, 0.15); 
-                    bRigged(T_Grp, hip, v(hip.x, hip.y - 0.2, hip.z + 0.3), pat, 0.18, tenMat); 
-                    
-                    bRigged(S_Grp, kn, kn, ank, 0.25); 
-                    bRigged(S_Grp, kn, ank, hl, 0.18); 
-                    bRigged(S_Grp, kn, ank, bI, 0.14); 
-                    bRigged(S_Grp, kn, ank, bO, 0.14); 
-                    bRigged(S_Grp, kn, bI, v(1.5 * x, -11.6, 1.6), 0.12); 
-                    bRigged(S_Grp, kn, bO, v(2.5 * x, -11.6, 1.6), 0.12); 
-                    
-                    const pCore = v(0, botY, 0.2);
-                    const orbit = v(1.1 * x, botY, 0.4); 
-                    bRigged(this.torso, v(0,0,0), pCore, orbit, 0.35); 
-                    bRigged(this.torso, v(0,0,0), orbit, hip, 0.42);   
-                    bRigged(this.torso, v(0,0,0), pCore, v(0, botY + 1.2, 0), 0.25); 
-
-                    const neckBase = v(0, topY, 0); 
-                    const headAnchor = v(0.7 * x, topY + 0.6, -0.2); 
-                    bRigged(this.head, v(0, topY, 0), neckBase, headAnchor, 0.18); 
-
-                    const brow = v(1.2 * x, orbY + 1.2, 0.8);   
-                    const cheek = v(1.3 * x, orbY - 0.3, 1.0);  
-                    const rearPlate = v(1.0 * x, orbY + 0.2, -1.2); 
-
-                    bRigged(this.head, v(0, topY, 0), headAnchor, brow, 0.14);
-                    bRigged(this.head, v(0, topY, 0), headAnchor, cheek, 0.16);
-                    bRigged(this.head, v(0, topY, 0), headAnchor, rearPlate, 0.12);
-
-                    const filamentEnd = new THREE.Vector3().lerpVectors(brow, bCen, 0.7);
-                    const cheekFilament = new THREE.Vector3().lerpVectors(cheek, bCen, 0.7);
-                    
-                    bRigged(this.head, v(0, topY, 0), brow, filamentEnd, 0.04, tenMat);      
-                    bRigged(this.head, v(0, topY, 0), cheek, cheekFilament, 0.04, tenMat);   
-                    bRigged(this.head, v(0, topY, 0), rearPlate, v(0.2 * x, orbY, -0.5), 0.03, tenMat); 
-
-                    const jawHinge = v(0.9 * x, topY + 0.4, 1.3); 
-                    bRigged(this.head, v(0, topY, 0), cheek, jawHinge, 0.10, tenMat); 
-                    bRigged(this.head, v(0, topY, 0), jawHinge, chin, 0.22);
-                });
-                
-                // --- 4. SCALING ---
-                const scaleFactor = 0.22; 
-                this.group.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                this.group.position.y = 11.6 * scaleFactor;
-
-            update(time) {
-                // I disabled the constant full-body spinning so you can walk around it properly
-                // this.group.rotation.y = time * 0.15; 
-
-                const breath = Math.sin(time * 2);
-                this.chest.scale.z = 1 + breath * 0.04;
-                this.pl.intensity = 1.0 + (breath * 0.5);
-
-                const orbPulse = 1.0 + Math.sin(time * 4) * 0.05;
-                this.orb.scale.set(orbPulse, orbPulse, orbPulse);
-
-                this.head.position.y = Math.sin(time * 2) * 0.1;
+        const v = (x,y,z) => new THREE.Vector3(x,y,z);
+        const stT = v(0, topY - 0.5, 1.4), stM = v(0, topY - 1.6, 1.45), stB = v(0, topY - 2.8, 1.5);
+        
+        // Spine & Ribcage
+        bRigged(this.torso, v(0,0,0), stT, stB, 0.12);
+        for (let i = 0; i <= 15; i++) {
+            const y = topY - (i * ((topY - botY) / 15));
+            const vert = new THREE.Mesh(new THREE.CylinderGeometry(0.16+(i*0.012), 0.16+(i*0.012), 0.3, 16), obsMat);
+            vert.position.set(0, y, 0); this.torso.add(vert);
+            if (i >= 1 && i <= 13) bRigged(this.torso, v(0,0,0), v(0, y, 0), v(0, y + 0.1, -0.45), 0.08);
+            if (i >= 2 && i <= 13 && (i % 2 === 0 || i === 13)) {
+                const w = 1.8 - (i * 0.05), oL = v(-w, y, -0.2), oR = v(w, y, -0.2);
+                const stC = new THREE.Vector3().lerpVectors(stT, stB, Math.min((i - 2) / 8, 1));
+                bRigged(this.torso, v(0,0,0), v(0,y,0), oL, 0.08); bRigged(this.torso, v(0,0,0), v(0,y,0), oR, 0.08);
+                bRigged(this.torso, v(0,0,0), oL, stC, 0.08); bRigged(this.torso, v(0,0,0), oR, stC, 0.08);
             }
         }
+
+        // Head Core
+        const orbY = topY + 1.8;
+        this.orb = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), glowMat);
+        this.orb.position.set(0, orbY - topY, 0); 
+        this.head.add(this.orb);
+        
+        this.pl = new THREE.PointLight(0x00f2ff, 3.0, 60); 
+        this.pl.position.set(0, orbY - topY, 0); 
+        this.head.add(this.pl);
+        bRigged(this.head, v(0, topY, 0), v(0, topY, 0), v(0, orbY + 0.2, -0.8), 0.1); 
+
+        // --- 3. PROCEDURAL LIMB GENERATION ---
+        const pub = v(0, botY - 0.5, 0.5);
+        const jHing = v(0, topY + 0.5, -0.2), chin = v(0, topY + 0.8, 1.6), bCen = v(0, orbY + 0.8, 1.1);
+        
+        [-1, 1].forEach(x => {
+            const sh = v(2.8 * x, topY + 0.2, 0);
+            const cl = v(1.3 * x, topY - 0.2, 0.8);
+            const sc = v(1.6 * x, topY - 1.8, -0.8);
+            const el = v(3.2 * x, 0, 0.2);
+            const wC = v(3.4 * x, -3.2, 0.6);
+            const hip = v(1.6 * x, botY, 0);
+            const kn = v(1.8 * x, -6.5, 1.2);
+            const pat = v(1.8 * x, -6.6, 1.6);
+            const ank = v(2.0 * x, -10.5, -0.5);
+            const hl = v(2.0 * x, -10.8, -1.2);
+            const bI = v(1.5 * x, -11.2, 0.8);
+            const bO = v(2.5 * x, -11.2, 0.8);
+            const jw = v(-0.6*x, topY+0.6, 0.6);
+            const chk = v(-0.8*x, orbY, 0.8);
+
+            let T_Grp, S_Grp, A_Grp, F_Grp;
+            if (x === 1) { 
+                this.L_Thigh.position.copy(hip); this.L_Shin.position.copy(kn).sub(hip);
+                this.L_Arm.position.copy(sh); this.L_Forearm.position.copy(el).sub(sh);
+                T_Grp = this.L_Thigh; S_Grp = this.L_Shin; A_Grp = this.L_Arm; F_Grp = this.L_Forearm;
+            } else { 
+                this.R_Thigh.position.copy(hip); this.R_Shin.position.copy(kn).sub(hip);
+                this.R_Arm.position.copy(sh); this.R_Forearm.position.copy(el).sub(sh);
+                T_Grp = this.R_Thigh; S_Grp = this.R_Shin; A_Grp = this.R_Arm; F_Grp = this.R_Forearm;
+            }
+
+            bRigged(this.torso, v(0,0,0), stT, cl, 0.12); bRigged(this.torso, v(0,0,0), cl, sh, 0.12); bRigged(this.torso, v(0,0,0), sh, sc, 0.13);
+            bRigged(this.torso, v(0,0,0), v(0, topY + 0.7, -0.4), sh, 0.12, tenMat); 
+            bRigged(this.torso, v(0,0,0), v(0, topY - 3.2, -0.2), sc, 0.22, tenMat); 
+            bRigged(this.torso, v(0,0,0), v(0, topY - 3.9, -0.1), v(1.3 * x, topY - 2.6, -0.5), 0.14, tenMat);
+
+            bRigged(A_Grp, sh, sh, el, 0.26); 
+            bRigged(F_Grp, el, el, wC, 0.22); 
+            
+            const palm = v(wC.x, wC.y - 0.2, wC.z);
+            bRigged(F_Grp, el, wC, palm, 0.18); 
+
+            const fT = 0.11; const tM = v(3.0 * x, -3.6, 0.8);
+            bRigged(F_Grp, el, palm, tM, fT); bRigged(F_Grp, el, tM, v(2.8 * x, -4.0, 1.0), fT - 0.02);
+            const iM = v(3.4 * x, -4.0, 1.2);
+            bRigged(F_Grp, el, palm, iM, fT); bRigged(F_Grp, el, iM, v(3.4 * x, -4.6, 1.4), fT - 0.02);
+            const pM = v(3.8 * x, -3.8, 0.7);
+            bRigged(F_Grp, el, palm, pM, fT); bRigged(F_Grp, el, pM, v(4.0 * x, -4.2, 0.5), fT - 0.02);
+
+            bRigged(T_Grp, hip, hip, kn, 0.38); 
+            bRigged(T_Grp, hip, kn, pat, 0.15); 
+            bRigged(T_Grp, hip, v(hip.x, hip.y - 0.2, hip.z + 0.3), pat, 0.18, tenMat); 
+            
+            bRigged(S_Grp, kn, kn, ank, 0.25); 
+            bRigged(S_Grp, kn, ank, hl, 0.18); 
+            bRigged(S_Grp, kn, ank, bI, 0.14); 
+            bRigged(S_Grp, kn, ank, bO, 0.14); 
+            bRigged(S_Grp, kn, bI, v(1.5 * x, -11.6, 1.6), 0.12); 
+            bRigged(S_Grp, kn, bO, v(2.5 * x, -11.6, 1.6), 0.12); 
+            
+            const pCore = v(0, botY, 0.2);
+            const orbit = v(1.1 * x, botY, 0.4); 
+            bRigged(this.torso, v(0,0,0), pCore, orbit, 0.35); 
+            bRigged(this.torso, v(0,0,0), orbit, hip, 0.42);   
+            bRigged(this.torso, v(0,0,0), pCore, v(0, botY + 1.2, 0), 0.25); 
+
+            const neckBase = v(0, topY, 0); 
+            const headAnchor = v(0.7 * x, topY + 0.6, -0.2); 
+            bRigged(this.head, v(0, topY, 0), neckBase, headAnchor, 0.18); 
+
+            const brow = v(1.2 * x, orbY + 1.2, 0.8);   
+            const cheek = v(1.3 * x, orbY - 0.3, 1.0);  
+            const rearPlate = v(1.0 * x, orbY + 0.2, -1.2); 
+
+            bRigged(this.head, v(0, topY, 0), headAnchor, brow, 0.14);
+            bRigged(this.head, v(0, topY, 0), headAnchor, cheek, 0.16);
+            bRigged(this.head, v(0, topY, 0), headAnchor, rearPlate, 0.12);
+
+            const filamentEnd = new THREE.Vector3().lerpVectors(brow, bCen, 0.7);
+            const cheekFilament = new THREE.Vector3().lerpVectors(cheek, bCen, 0.7);
+            
+            bRigged(this.head, v(0, topY, 0), brow, filamentEnd, 0.04, tenMat);      
+            bRigged(this.head, v(0, topY, 0), cheek, cheekFilament, 0.04, tenMat);   
+            bRigged(this.head, v(0, topY, 0), rearPlate, v(0.2 * x, orbY, -0.5), 0.03, tenMat); 
+
+            const jawHinge = v(0.9 * x, topY + 0.4, 1.3); 
+            bRigged(this.head, v(0, topY, 0), cheek, jawHinge, 0.10, tenMat); 
+            bRigged(this.head, v(0, topY, 0), jawHinge, chin, 0.22);
+        });
+        
+        // --- 4. SCALING ---
+        const scaleFactor = 0.22; 
+        this.group.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        this.group.position.y = 11.6 * scaleFactor;
+    } // <-- End of constructor
+
+    // --- 5. THE AI BRAIN & ANIMATION ---
+    update(time, playerPosition) {
+        const walkSpeed = time * 4;
+
+        // 1. TORSO: Pelvic Bob & Hip Sway
+        this.torso.position.y = Math.sin(walkSpeed * 2) * 0.2;
+        this.torso.rotation.z = Math.sin(walkSpeed) * 0.1;
+
+        // 2. LEGS: The Marching Test
+        this.L_Thigh.rotation.x = Math.sin(walkSpeed) * 0.5;
+        this.R_Thigh.rotation.x = Math.sin(walkSpeed + Math.PI) * 0.5;
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(walkSpeed - 1)) * 0.6;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(walkSpeed + Math.PI - 1)) * 0.6;
+
+        // 3. ARMS: The Tension Test
+        this.L_Arm.rotation.x = Math.sin(walkSpeed + Math.PI) * 0.3;
+        this.R_Arm.rotation.x = Math.sin(walkSpeed) * 0.3;
+        this.L_Forearm.rotation.z = -0.2 + Math.sin(walkSpeed) * 0.2;
+        this.R_Forearm.rotation.z = 0.2 - Math.sin(walkSpeed) * 0.2;
+
+        // 4. BREATHING CORE & LIGHTS
+        const breath = Math.sin(time * 2);
+        this.torso.scale.z = 1 + breath * 0.04; 
+        this.pl.intensity = 1.0 + (breath * 0.5);
+
+        const orbPulse = 1.0 + Math.sin(time * 4) * 0.05;
+        this.orb.scale.set(orbPulse, orbPulse, orbPulse);
+
+        // 5. HEAD TRACKING (Looks at player)
+        this.head.position.y = 3.0 + Math.sin(time * 2) * 0.1;
+        
+        if (playerPosition) {
+            const targetLocal = this.group.worldToLocal(playerPosition.clone());
+            this.head.lookAt(targetLocal);
+            // Clamp it so it doesn't snap its neck backward
+            this.head.rotation.x = Math.max(-0.5, Math.min(0.5, this.head.rotation.x));
+            this.head.rotation.y = Math.max(-1.0, Math.min(1.0, this.head.rotation.y));
+            this.head.rotation.z = 0; 
+        } else {
+            this.head.rotation.y = Math.sin(time * 1.5) * 0.4;
+        }
+    }
+}
 
         const unit = new Sentinel();
         scene.add(unit.group);
