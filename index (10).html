@@ -71,16 +71,17 @@
                 const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
 
                 const v = (x,y,z) => new THREE.Vector3(x,y,z);
-                const b = (parent, p1, p2, radius, mat = obsMat) => {
-                    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([p1, p2]), 2, radius, 12, false);
-                    parent.add(new THREE.Mesh(geo, mat));
-                    if (mat === obsMat) {
-                        const cap = new THREE.SphereGeometry(radius * 1.05, 12, 12);
-                        const m1 = new THREE.Mesh(cap, tiMat); m1.position.copy(p1);
-                        const m2 = new THREE.Mesh(cap, tiMat); m2.position.copy(p2);
-                        parent.add(m1, m2);
-                    }
-                };
+              const b = (parent, p1, p2, radius, mat = obsMat) => {
+    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([p1, p2]), 2, radius, 12, false);
+    parent.add(new THREE.Mesh(geo, mat));
+    if (mat === obsMat) {
+        const cap = new THREE.SphereGeometry(radius * 1.05, 12, 12);
+        // Changed tiMat to glowMat on the next two lines:
+        const m1 = new THREE.Mesh(cap, glowMat); m1.position.copy(p1); 
+        const m2 = new THREE.Mesh(cap, glowMat); m2.position.copy(p2); 
+        parent.add(m1, m2);
+    }
+};
 
                 const topY = 3.0, botY = -2.0;
                 const stT = v(0, topY - 0.5, 1.4), stM = v(0, topY - 1.6, 1.45), stB = v(0, topY - 2.8, 1.5);
