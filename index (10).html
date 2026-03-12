@@ -191,65 +191,75 @@ class Sentinel {
     }
 
 update(time, playerPosition) {
-        const walkTempo = time * 3.5; 
-        const rawCycle = Math.sin(walkTempo);
-        
-        // Drive cycle: snappy swing forward, heavy grind backward
-        const driveCycle = Math.sin(walkTempo) - Math.sin(walkTempo * 2) * 0.15;
-        const pop = Math.sign(rawCycle) * Math.pow(Math.abs(rawCycle), 0.5);
+        const cycle = time * 4.0; 
 
-        // Two impacts per cycle (one for each footfall)
-        const footfall = Math.cos(walkTempo * 2); 
+        // Snappy forward leg swing, slow heavy push backward
+        const driveCycle = Math.sin(cycle) - Math.sin(cycle * 2) * 0.2; 
         
-        // The torso drops heavily on the catch, pushes up on the stride
-        this.torso.position.y = footfall * 0.2; 
-        this.torso.position.x = 0; // Removed horizontal sliding so feet stay planted
-        
-        // Torso leans forward into the walk, twisting with the hips
-        this.torso.rotation.x = 0.15 + (footfall * 0.05);
-        this.torso.rotation.y = pop * 0.25; 
-        this.torso.rotation.z = Math.sin(walkTempo) * -0.05; 
+        // Explosive push off the floor: deep drop on catch, sharp rise
+        const drop = Math.pow(Math.abs(Math.cos(cycle)), 2.5); 
+        this.torso.position.y = drop * 0.45; 
+        this.torso.position.x = 0; 
 
-        const topSway = Math.sin(walkTempo * 0.5) * 0.15;
+        // Pelvis tilts forward for the momentum
+        const forwardLean = 0.35;
+        this.torso.rotation.x = forwardLean + (drop * 0.15);
+        this.torso.rotation.y = Math.sin(cycle) * 0.25; 
+        this.torso.rotation.z = Math.sin(cycle) * -0.05; 
+
+        const topSway = Math.sin(cycle * 0.5) * 0.1;
 
         if (this.vertebrae && this.vertebrae.length > 0) {
             const vLen = this.vertebrae.length;
             this.vertebrae.forEach((vert, i) => {
-                const wave = Math.sin(walkTempo * 1.5 - i * 0.2) * 0.08;
+                const wave = Math.sin(cycle * 1.5 - i * 0.2) * 0.06;
                 const flex = (i / vLen) * topSway;
+                
+                // Spine progressively bends forward to match the run
+                vert.rotation.x = 0.08; 
                 vert.rotation.z = wave + flex; 
-                vert.position.x = (wave * 0.4) + (flex * 3.5);
+                // Upper body twists opposite to hips to balance the stride
+                vert.rotation.y = -Math.sin(cycle) * 0.1; 
+                vert.position.x = (wave * 0.3) + (flex * 2.0);
             });
         }
 
-        this.L_Arm.position.x = 2.8 + (topSway * 2.5);
-        this.R_Arm.position.x = -2.8 + (topSway * 2.5);
-        this.L_Arm.position.y = 3.2 - (topSway * 0.8);
-        this.R_Arm.position.y = 3.2 + (topSway * 0.8);
+        this.L_Arm.position.x = 2.8 + (topSway * 2.0);
+        this.R_Arm.position.x = -2.8 + (topSway * 2.0);
+        this.L_Arm.position.y = 3.2 - (topSway * 0.5);
+        this.R_Arm.position.y = 3.2 + (topSway * 0.5);
 
-        const legSweep = 1.1; 
+        // LEGS: Plant and push
+        const legSweep = 1.2; 
         this.L_Thigh.rotation.x = driveCycle * legSweep;
         this.R_Thigh.rotation.x = -driveCycle * legSweep;
         
-        this.L_Shin.rotation.x = Math.max(0, Math.sin(walkTempo - 0.5)) * 1.5;
-        this.R_Shin.rotation.x = Math.max(0, Math.sin(walkTempo + Math.PI - 0.5)) * 1.5;
+        // Shins stay straight when planted (pushing), but snap up sharply during recovery
+        this.L_Shin.rotation.x = Math.max(0, Math.sin(cycle - 0.8)) * 1.8;
+        this.R_Shin.rotation.x = Math.max(0, Math.sin(cycle + Math.PI - 0.8)) * 1.8;
 
-        this.L_Arm.rotation.x = -pop * 0.6 - 0.15;
-        this.R_Arm.rotation.x = pop * 0.6 - 0.15;
-        this.L_Forearm.rotation.z = -0.6 + Math.abs(pop) * 0.2;
-        this.R_Forearm.rotation.z = 0.6 + Math.abs(pop) * 0.2;
+        // ARMS: Fully balanced using all joints
+        const armSweep = 1.1;
+        // Shoulders swing strictly opposite to the legs
+        this.L_Arm.rotation.x = Math.sin(cycle + Math.PI) * armSweep;
+        this.R_Arm.rotation.x = Math.sin(cycle) * armSweep;
 
-        const breath = Math.sin(time * 1.5) * Math.cos(time * 0.5);
+        // Elbows pump: bend sharply when swinging forward, straighten when pushing back
+        this.L_Forearm.rotation.z = -0.3 - Math.max(0, Math.sin(cycle + Math.PI)) * 0.8;
+        this.R_Forearm.rotation.z = 0.3 + Math.max(0, Math.sin(cycle)) * 0.8;
+
+        const breath = Math.sin(time * 2.0) * Math.cos(time * 0.5);
         this.torso.scale.z = 1 + breath * 0.05; 
         if (this.pl) this.pl.intensity = 1.2 + (breath * 0.8);
         if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.06);
 
-        this.head.position.x = topSway * 3.5;
+        this.head.position.x = topSway * 3.0;
         this.head.position.y = 3.0 - this.torso.position.y; 
         if (playerPosition) {
             const targetLocal = this.group.worldToLocal(playerPosition.clone());
             this.head.lookAt(targetLocal);
-            this.head.rotation.x = Math.max(-0.4, Math.min(0.4, this.head.rotation.x));
+            // Head tilts up slightly to compensate for the forward spine lean
+            this.head.rotation.x = Math.max(-0.5, Math.min(0.5, this.head.rotation.x - forwardLean - 0.2));
             this.head.rotation.y = Math.max(-0.7, Math.min(0.7, this.head.rotation.y));
             this.head.rotation.z = topSway * 0.6; 
         }
