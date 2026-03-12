@@ -403,16 +403,7 @@ update(time, playerPosition) {
         this.head.position.x = 0; 
         this.head.position.y = 2.8 - this.torso.position.y; // Absorbs the body drop perfectly
         this.head.position.z = 1.0; 
-
-        if (playerPosition) {
-            const targetLocal = this.group.worldToLocal(playerPosition.clone());
-            this.head.lookAt(targetLocal);
-            // Stares you down from under its brow, perfectly level
-            this.head.rotation.x = Math.max(-1.0, Math.min(1.0, this.head.rotation.x - forwardLean - 0.2));
-            this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
-            this.head.rotation.z = 0; // No tilting. Gimbal-locked.
-        }
-    }update(time, playerPosition) {
+update(time, playerPosition) {
         // 1. Heavy Juggernaut Charge - Unstoppable, rigid machine sprint
         const cycle = time * 7.0; 
 
