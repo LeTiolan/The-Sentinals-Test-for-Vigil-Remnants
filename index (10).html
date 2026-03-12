@@ -191,84 +191,79 @@ class Sentinel {
     }
 
 update(time, playerPosition) {
-        // 1. Extreme speed, but mechanical pacing
-        const cycle = time * 7.5; 
-
-        // 2. Piston-math: Snaps fast, lingers at the extremes for a heavy, robotic strike
-        const rawDrive = Math.sin(cycle);
-        const roboticDrive = Math.sign(rawDrive) * Math.pow(Math.abs(rawDrive), 0.6); 
+        // 1. Slow, methodical stalking pace
+        const cycle = time * 2.5; 
         
-        // Heavy, sharp, concussive footfalls
-        const drop = Math.pow(Math.abs(Math.cos(cycle)), 3.0); 
-        this.torso.position.y = drop * 0.5 - 0.1; 
-        this.torso.position.x = Math.sin(cycle) * 0.1; // Reduced horizontal drift for rigid machine posture
+        // 2. Predatory crouch: Low to the ground at all times
+        this.torso.position.y = -0.5 + Math.sin(cycle * 2) * 0.15; 
+        
+        // Extreme weight shifting side to side, placing each foot carefully
+        this.torso.position.x = Math.sin(cycle) * 0.4; 
 
-        // 3. Stiff, locked-in forward lean
-        const forwardLean = 0.65;
-        this.torso.rotation.x = forwardLean + (drop * 0.1);
-        this.torso.rotation.y = roboticDrive * 0.35; // Hips torque sharply
-        this.torso.rotation.z = 0; // Rigid core, no side-to-side tilting
+        // 3. Deep, hunched forward lean
+        const forwardLean = 0.5;
+        this.torso.rotation.x = forwardLean;
+        this.torso.rotation.y = Math.sin(cycle) * 0.3; // Hips rotate heavily with the long strides
+        this.torso.rotation.z = Math.sin(cycle) * -0.15; // Shoulders tilt heavily into the step
 
-        const topSway = Math.sin(cycle * 0.5) * 0.05;
+        const topSway = Math.sin(cycle * 0.5) * 0.1;
 
         if (this.vertebrae && this.vertebrae.length > 0) {
             const vLen = this.vertebrae.length;
             this.vertebrae.forEach((vert, i) => {
-                const wave = Math.sin(cycle * 1.5 - i * 0.2) * 0.05;
+                const wave = Math.sin(cycle * 1.5 - i * 0.3) * 0.1;
                 const flex = (i / vLen) * topSway;
                 
-                vert.rotation.x = 0.1; 
+                vert.rotation.x = 0.15; // Spine curls forward smoothly
                 vert.rotation.z = wave + flex; 
-                vert.rotation.y = -roboticDrive * 0.2; // Counter-torque matches the harsh hip snap
-                vert.position.x = (wave * 0.2);
+                vert.rotation.y = -Math.sin(cycle - (i * 0.1)) * 0.2; // Snake-like spine twist
+                vert.position.x = (wave * 0.3);
             });
         }
 
-        // 4. FIXED SHOULDERS: Anchored perfectly back into the sockets
-        this.L_Arm.position.x = 2.8;
-        this.R_Arm.position.x = -2.8;
-        this.L_Arm.position.y = 3.2;
-        this.R_Arm.position.y = 3.2;
+        // 4. Arms held up and tight, ready to pounce
+        this.L_Arm.position.x = 2.4;
+        this.R_Arm.position.x = -2.4;
+        this.L_Arm.position.y = 2.8;
+        this.R_Arm.position.y = 2.8;
 
-        // 5. Heavy, purpose-driven mechanical leg strokes
-        const legSweep = 1.6; 
-        this.L_Thigh.rotation.x = roboticDrive * legSweep;
-        this.R_Thigh.rotation.x = -roboticDrive * legSweep;
+        // Long, reaching stealth strides
+        const legSweep = 1.0; 
+        this.L_Thigh.rotation.x = Math.sin(cycle) * legSweep;
+        this.R_Thigh.rotation.x = Math.sin(cycle + Math.PI) * legSweep;
         
-        // Shins snap with zero smooth easing
-        this.L_Shin.rotation.x = Math.max(0, Math.sign(Math.sin(cycle - 0.6)) * Math.pow(Math.abs(Math.sin(cycle - 0.6)), 0.4)) * 2.2;
-        this.R_Shin.rotation.x = Math.max(0, Math.sign(Math.sin(cycle + Math.PI - 0.6)) * Math.pow(Math.abs(Math.sin(cycle + Math.PI - 0.6)), 0.4)) * 2.2;
+        // Shins stay bent to maintain the low crouch, lifting high to clear the ground
+        this.L_Shin.rotation.x = 0.5 + Math.max(0, Math.sin(cycle - 0.5)) * 1.5;
+        this.R_Shin.rotation.x = 0.5 + Math.max(0, Math.sin(cycle + Math.PI - 0.5)) * 1.5;
 
-        // 6. Brutal, straight-line arm pumping
-        const armSweep = 1.6;
-        this.L_Arm.rotation.x = -roboticDrive * armSweep;
-        this.R_Arm.rotation.x = roboticDrive * armSweep;
+        // 5. Arms don't swing much; they hover and react to the torso shift
+        this.L_Arm.rotation.x = 0.4 - Math.sin(cycle + Math.PI) * 0.2;
+        this.R_Arm.rotation.x = 0.4 - Math.sin(cycle) * 0.2;
 
-        // Tuck slightly inward for aerodynamics, but pivot from the true socket
-        this.L_Arm.rotation.z = -0.15;
-        this.R_Arm.rotation.z = 0.15;
+        this.L_Arm.rotation.z = -0.3;
+        this.R_Arm.rotation.z = 0.3;
 
-        // Elbows punch and lock mechanically
-        this.L_Forearm.rotation.z = -0.2 - Math.max(0, -roboticDrive) * 1.4;
-        this.R_Forearm.rotation.z = 0.2 + Math.max(0, roboticDrive) * 1.4;
+        // Elbows sharply bent inward, hands brought up towards the chest/face
+        this.L_Forearm.rotation.z = -1.4 + Math.sin(cycle) * 0.1;
+        this.R_Forearm.rotation.z = 1.4 - Math.sin(cycle + Math.PI) * 0.1;
 
-        // Core pulsing is sharp and synthetic
-        const breath = Math.pow(Math.abs(Math.sin(time * 5.0)), 4.0);
-        this.torso.scale.z = 1 + breath * 0.08; 
-        if (this.pl) this.pl.intensity = 1.5 + (breath * 1.5); // Light flashes sharply like an engine revving
-        if (this.orb) this.orb.scale.setScalar(1.0 + breath * 0.15);
+        // 6. Slow, menacing pulsing (lights dim for stealth)
+        const breath = Math.sin(time * 1.0);
+        this.torso.scale.z = 1 + breath * 0.05; 
+        if (this.pl) this.pl.intensity = 0.8 + (breath * 0.4); 
+        if (this.orb) this.orb.scale.setScalar(0.8 + breath * 0.05);
 
-        // 7. Head perfectly stabilized and locked onto target
-        this.head.position.x = 0; // Removed sway so the head tracks perfectly smoothly
-        this.head.position.y = 2.6 - this.torso.position.y; 
-        this.head.position.z = 1.2; 
+        // 7. Head stays eerily perfectly still, jutting forward and locked onto the player
+        this.head.position.x = 0; 
+        this.head.position.y = 2.4 - this.torso.position.y; 
+        this.head.position.z = 1.8; 
 
         if (playerPosition) {
             const targetLocal = this.group.worldToLocal(playerPosition.clone());
             this.head.lookAt(targetLocal);
-            // Counteracts the deep body lean so the head stays dead-level
-            this.head.rotation.x = Math.max(-1.0, Math.min(1.0, this.head.rotation.x - forwardLean - 0.2));
-            this.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.head.rotation.y));
+            // Tilts up sharply to look from under its brow due to the deep hunch
+            this.head.rotation.x = Math.max(-1.2, Math.min(1.2, this.head.rotation.x - forwardLean - 0.3));
+            this.head.rotation.y = Math.max(-1.0, Math.min(1.0, this.head.rotation.y));
             this.head.rotation.z = 0; 
         }
     }
